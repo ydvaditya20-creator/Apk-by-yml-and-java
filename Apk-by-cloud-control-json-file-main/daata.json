@@ -1,0 +1,29 @@
+{
+    "head": {
+        "title": "JSON to HTML Engine",
+        "meta": [
+            {
+                "charset": "UTF-8"
+            },
+            {
+                "name": "viewport",
+                "content": "width=device-width, initial-scale=1.0"
+            }
+        ]
+    },
+    "css": {
+        "internal": [
+            "\n        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; color: #333; display: flex; flex-direction: column; height: 95vh; }\n        textarea { width: 100%; height: 150px; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }\n        button { background-color: #28a745; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-size: 16px; margin-bottom: 15px; align-self: flex-start; }\n        button:hover { background-color: #218838; }\n        iframe { flex-grow: 1; width: 100%; border: 2px solid #ccc; border-radius: 4px; background: white; }\n        .engine-container { display: flex; flex-direction: column; flex-grow: 1; }\n    "
+        ],
+        "external": []
+    },
+    "body": {
+        "html": "\n\n    <h2>JSON to HTML Render Engine</h2>\n    <p>Apna output JSON data neeche paste karein:</p>\n    <textarea id=\"jsonInput\" placeholder=\"Yahaan JSON data paste karein...\"></textarea>\n    \n    <button onclick=\"renderJSONEngine()\">Run Engine</button>\n\n    <div class=\"engine-container\">\n        <h3>Live Workable Screen:</h3>\n        <iframe id=\"outputScreen\"></iframe>\n    </div>\n\n    \n\n\n"
+    },
+    "script": {
+        "internal": [
+            "\n        function renderJSONEngine() {\n            const jsonString = document.getElementById('jsonInput').value;\n            if (!jsonString.trim()) {\n                alert('Kripya pehle JSON data paste karein!');\n                return;\n            }\n\n            try {\n                const data = JSON.parse(jsonString);\n                const iframe = document.getElementById('outputScreen');\n                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;\n\n                // Document clear karein\n                iframeDoc.open();\n                iframeDoc.write(\"<!DOCTYPE html><html><head></head><body></body></html>\");\n                iframeDoc.close();\n\n                // 1. Set Title\n                if (data.head && data.head.title) {\n                    iframeDoc.title = data.head.title;\n                }\n\n                // 2. Inject Meta Tags\n                if (data.head && data.head.meta) {\n                    data.head.meta.forEach(metaData => {\n                        const meta = iframeDoc.createElement('meta');\n                        Object.keys(metaData).forEach(key => {\n                            meta.setAttribute(key, metaData[key]);\n                        });\n                        iframeDoc.head.appendChild(meta);\n                    });\n                }\n\n                // 3. Inject External CSS\n                if (data.css && data.css.external) {\n                    data.css.external.forEach(href => {\n                        const link = iframeDoc.createElement('link');\n                        link.rel = 'stylesheet';\n                        link.href = href;\n                        iframeDoc.head.appendChild(link);\n                    });\n                }\n\n                // 4. Inject Internal CSS\n                if (data.css && data.css.internal) {\n                    data.css.internal.forEach(cssText => {\n                        const style = iframeDoc.createElement('style');\n                        style.textContent = cssText;\n                        iframeDoc.head.appendChild(style);\n                    });\n                }\n\n                // 5. Inject Body HTML\n                if (data.body && data.body.html) {\n                    iframeDoc.body.innerHTML = data.body.html;\n                }\n\n                // 6. Inject External Scripts\n                if (data.script && data.script.external) {\n                    data.script.external.forEach(src => {\n                        const script = iframeDoc.createElement('script');\n                        script.src = src;\n                        script.async = false; // Sequence barkarar rakhne ke liye\n                        iframeDoc.body.appendChild(script);\n                    });\n                }\n\n                // 7. Inject Internal Scripts\n                if (data.script && data.script.internal) {\n                    data.script.internal.forEach(jsText => {\n                        const script = iframeDoc.createElement('script');\n                        script.textContent = jsText;\n                        iframeDoc.body.appendChild(script);\n                    });\n                }\n\n            } catch (error) {\n                alert(\"Invalid JSON format! Kripya sahi JSON paste karein. Error: \" + error.message);\n            }\n        }\n    "
+        ],
+        "external": []
+    }
+}
