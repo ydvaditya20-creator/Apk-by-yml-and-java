@@ -10,38 +10,61 @@
     <h1>Mobile Notification Test</h1>
     <button onclick="sendNotification()">Show Notification</button>
 
-    <script type="module">
-        import { LocalNotifications } from "@capacitor/local-notifications";
+    <!-- Global object injection standard tarika bina system bundling ke -->
+    <script>
+        // Custom error handler jo mobile screen par error alert dikhayega
+        window.onerror = function(msg, url, linenumber) {
+            alert('Error: ' + msg + '\nLine: ' + linenumber);
+            return true;
+        };
 
-        // Permission Request
+        // Android environment check aur manual trigger ke liye logic
         async function requestPermission() {
-            const status = await LocalNotifications.requestPermissions();
+            try {
+                // Agar script correctly inject nahi hui to error pakadne ke liye
+                if (typeof Capacitor === 'undefined') {
+                    alert("Capacitor core library load nahi ho payi!");
+                    return;
+                }
+                
+                // Pure Javascript dynamic bridge use kar rahe hain jo browser fetch bypass karega
+                const { LocalNotifications } = Capacitor.Plugins;
+                if(!LocalNotifications) {
+                    alert("LocalNotifications plugin package.json se sahi se merge nahi hua.");
+                    return;
+                }
 
-            if (status.display === "granted") {
-                console.log("Notification permission granted.");
-            } else {
-                console.log("Notification permission denied.");
+                const status = await LocalNotifications.requestPermissions();
+                alert('Permission status: ' + JSON.stringify(status));
+            } catch (err) {
+                alert('Permission Error: ' + err.message);
             }
         }
 
-        // Notification Function
-        window.sendNotification = async function () {
-            await LocalNotifications.schedule({
-                notifications: [
-                    {
-                        id: 1,
-                        title: "Namaste!",
-                        body: "Yeh aapka pehla local notification hai.",
-                        schedule: {
-                            at: new Date(Date.now() + 1000)
+        window.sendNotification = async function() {
+            try {
+                const { LocalNotifications } = Capacitor.Plugins;
+                
+                await LocalNotifications.schedule({
+                    notifications: [
+                        {
+                            title: "Namaste Android!",
+                            body: "Yeh mobile se push notification test hai.",
+                            id: 1,
+                            schedule: { at: new Date(Date.now() + 1000) }
                         }
-                    }
-                ]
-            });
+                    ]
+                });
+                alert("Notification schedule ho gaya! 1 sec rukiye.");
+            } catch (err) {
+                alert('Trigger Error: ' + err.message);
+            }
         };
 
-        requestPermission();
+        // Page load hone ke thodi der baad chalayein taaki Capacitor bridge active ho sake
+        setTimeout(() => {
+            requestPermission();
+        }, 1500);
     </script>
-
 </body>
 </html>
