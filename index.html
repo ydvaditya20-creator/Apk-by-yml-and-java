@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacitor Notification</title>
+</head>
+<body>
+
+    <h1>Mobile Notification Test</h1>
+    <button onclick="sendNotification()">Show Notification</button>
+
+    <script type="module">
+        import { LocalNotifications } from "@capacitor/local-notifications";
+
+        // Permission Request
+        async function requestPermission() {
+            const status = await LocalNotifications.requestPermissions();
+
+            if (status.display === "granted") {
+                console.log("Notification permission granted.");
+            } else {
+                console.log("Notification permission denied.");
+            }
+        }
+
+        // Notification Function
+        window.sendNotification = async function () {
+            await LocalNotifications.schedule({
+                notifications: [
+                    {
+                        id: 1,
+                        title: "Namaste!",
+                        body: "Yeh aapka pehla local notification hai.",
+                        schedule: {
+                            at: new Date(Date.now() + 1000)
+                        }
+                    }
+                ]
+            });
+        };
+
+        requestPermission();
+    </script>
+
+</body>
+</html>
