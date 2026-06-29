@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Loading...</title>
+</head>
+<body>
+    <script>
+        // CONFIGURATION: Apne GitHub Hosted JSON ka Raw URL yahaan dalein
+                    
+     const GITHUB_JSON_URL = "https://api.github.com/repos/ydvaditya20-creator/Apk-by-cloud-control-json-file/contents/daata.json";
+  async function fetchAndRenderAll() {
+    try {
+        const response = await fetch(GITHUB_JSON_URL, {
+            headers: {
+                "Accept": "application/vnd.github.v3+json"
+            },
+            cache: "no-cache"
+        });
+
+        if (!response.ok) {
+            console.error("GitHub se data nahi mila. Status:", response.status);
+            return;
+        }
+
+        const res = await response.json();
+
+        // Base64 decode
+        const data = JSON.parse(atob(res.content.replace(/\n/g, "")));
+
+        console.log("Live Data:", data);
+
+        // 1. Head clear
+        document.head.innerHTML =
+            '<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">';
+
+        // 2. Page Title
+        if (data.head?.title) {
+            document.title = data.head.title;
+        }
+
+        // 3. Meta Tags
+        if (data.head?.meta) {
+            data.head.meta.forEach(metaData => {
+                const meta = document.createElement("meta");
+                Object.entries(metaData).forEach(([key, value]) => {
+                    meta.setAttribute(key, value);
+                });
+                document.head.appendChild(meta);
+            });
+        }
+
+        // 4. External CSS
+        if (data.css?.external) {
+            for (const href of data.css.external) {
+                await new Promise(resolve => {
+                    const link = document.createElement("link");
+                    link.rel = "stylesheet";
+                    link.href = href;
+                    link.onload = resolve;
+                    link.onerror = resolve;
+                    document.head.appendChild(link);
+                });
+            }
+        }
+
+        // 5. Internal CSS
+        if (data.css?.internal) {
+            data.css.internal.forEach(cssText => {
+                const style = document.createElement("style");
+                style.textContent = cssText;
+                document.head.appendChild(style);
+            });
+        }
+
+        // 6. Body HTML
+        if (data.body?.html) {
+            document.body.innerHTML = data.body.html;
+        }
+
+        // 7. External JS
+        if (data.script?.external) {
+            for (const src of data.script.external) {
+                await new Promise(resolve => {
+                    const script = document.createElement("script");
+                    script.src = src;
+                    script.async = false;
+                    script.onload = resolve;
+                    script.onerror = resolve;
+                    document.body.appendChild(script);
+                });
+            }
+        }
+
+        // 8. Internal JS
+        if (data.script?.internal) {
+            data.script.internal.forEach(jsText => {
+                const script = document.createElement("script");
+                script.textContent = jsText;
+                document.body.appendChild(script);
+            });
+        }
+
+    } catch (err) {
+        console.error("Error:", err);
+    }
+}
+
+
+
+      
+
+        // DOM tayar hote hi immediate execution
+        window.addEventListener('DOMContentLoaded', fetchAndRenderAll);
+  // Har 5 second mein background data refresh karne ke liye loop function
+
+
+  
+    </script>
+</body>
+</html>
