@@ -1,0 +1,96 @@
+name: Build APK
+
+on:
+ workflow_dispatch:
+
+jobs:
+ build:
+  runs-on: ubuntu-latest
+
+  
+  steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+
+  - name: Setup Node
+    uses: actions/setup-node@v4
+    with:
+      node-version: 20
+
+  
+  - name: Setup Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '21'
+
+  - name: Add Network State Permission safely
+    run: |
+        node -e "
+        const fs = require('fs');
+        const path = 'android/app/src/main/AndroidManifest.xml';
+        if (fs.existsSync(path)) {
+          let content = fs.readFileSync(path, 'utf8');
+          if (!content.includes('ACCESS_NETWORK_STATE')) {
+            content = content.replace('</manifest>', '    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n</manifest>');
+            fs.writeFileSync(path, content, 'utf8');
+            console.log('Permission added successfully!');
+          }
+        } else {
+          console.log('Manifest file not found at expected path');
+        }
+        "
+
+  - name: Install Dependencies
+    run: npm install
+
+  
+
+  - name: Create Web Folder
+    run: |
+      mkdir -p www
+      cp index.html www/
+
+  - name: Create Capacitor Config
+    run: |
+      echo '{"appId":"com.example.myttap","appName":"MyttAp","webDir":"www"}' > capacitor.config.json
+
+  - name: Add Android
+    run: npx cap add android
+
+  - name: Sync Android
+    run: npx cap sync android
+    
+  - name: Show Android Files
+    run: |
+         find android -name MainActivity.*
+  - name: Check File Content
+    run: cat android/app/src/main/java/com/example/myttap/MainActivity.java
+  
+  - name: List All Generated Files & Folders
+    run: |
+          echo "=== 1. Root Directory Structure ==="
+          ls -la
+          
+          echo "=== 2. Inside Android Folder (Main Native Structure) ==="
+          ls -la android/
+          
+          echo "=== 3. Inside Android App Folder (Where code and assets live) ==="
+          ls -la android/app/
+          
+          echo "=== 4. Finding HTML/JS assets inside Android Project ==="
+          find android/app/src/main/assets/ -type f || echo "Assets not compiled here yet"
+          
+          
+
+  - name: Build APK
+    run: |
+      cd android
+      chmod +x gradlew
+      ./gradlew assembleDebug
+
+  - name: Upload APK
+    uses: actions/upload-artifact@v4
+    with:
+      name: app-debug
+      path: android/app/build/outputs/apk/debug/app-debug.apk
